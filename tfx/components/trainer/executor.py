@@ -18,13 +18,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 from typing import Any, Dict, List, Text
 
 import absl
+# TODO(jyzhao): consider split hp value from hyperparameters class.
+from kerastuner import HyperParameters
 import tensorflow as tf
 import tensorflow_model_analysis as tfma
 
 from google.protobuf import json_format
+from tensorflow.python.lib.io import file_io  # pylint: disable=g-direct-tensorflow-import
 from tensorflow_metadata.proto.v0 import schema_pb2
 from tfx import types
 from tfx.components.base import base_executor
@@ -171,6 +175,14 @@ class Executor(base_executor.BaseExecutor):
     base_model = path_utils.serving_model_path(
         artifact_utils.get_single_uri(
             input_dict['base_model'])) if input_dict.get('base_model') else None
+    if input_dict.get('hyperparameters'):
+      hyperparameters_file = io_utils.get_only_uri_in_dir(
+          artifact_utils.get_single_uri(input_dict['hyperparameters']))
+      hyperparameters_config = json.loads(
+          file_io.read_file_to_string(hyperparameters_file))
+      hyperparameters = HyperParameters.from_config(hyperparameters_config)
+    else:
+      hyperparameters = None
 
     train_args = trainer_pb2.TrainArgs()
     eval_args = trainer_pb2.EvalArgs()
@@ -206,7 +218,9 @@ class Executor(base_executor.BaseExecutor):
         # Number of eval steps.
         eval_steps=eval_steps,
         # Base model that will be used for this training job.
-        base_model=base_model)
+        base_model=base_model,
+        # An optional kerastuner.HyperParameters instance.
+        hyperparameters=hyperparameters)
 
     schema = io_utils.parse_pbtxt_file(schema_file, schema_pb2.Schema())
 

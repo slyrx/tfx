@@ -18,13 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 import os
+from kerastuner import HyperParameters
 import tensorflow as tf
 from google.protobuf import json_format
 from tfx.components.testdata.module_file import trainer_module
 from tfx.components.trainer import executor
 from tfx.proto import trainer_pb2
 from tfx.types import standard_artifacts
+from tfx.utils import io_utils
 
 
 class ExecutorTest(tf.test.TestCase):
@@ -47,7 +50,7 @@ class ExecutorTest(tf.test.TestCase):
     transform_output = standard_artifacts.TransformGraph()
     transform_output.uri = os.path.join(self._source_data_dir,
                                         'transform/transform_output/')
-    schema = standard_artifacts.Examples()
+    schema = standard_artifacts.Schema()
     schema.uri = os.path.join(self._source_data_dir, 'schema_gen/')
     previous_model = standard_artifacts.Model()
     previous_model.uri = os.path.join(self._source_data_dir,
@@ -127,6 +130,27 @@ class ExecutorTest(tf.test.TestCase):
           input_dict=self._input_dict,
           output_dict=self._output_dict,
           exec_properties=self._exec_properties)
+
+  def testDoWithHyperParameters(self):
+    hp_artifact = standard_artifacts.HyperParameters()
+    hp_artifact.uri = os.path.join(self._output_data_dir, 'hyperparameters/')
+
+    hyperparameters = HyperParameters()
+    hyperparameters.Fixed('first_dnn_layer_size', 100)
+    hyperparameters.Fixed('num_dnn_layers', 4)
+    hyperparameters.Fixed('dnn_decay_factor', 0.7)
+    io_utils.write_string_file(
+        os.path.join(hp_artifact.uri, 'hyperparameters.txt'),
+        json.dumps(hyperparameters.get_config()))
+
+    self._input_dict['hyperparameters'] = [hp_artifact]
+
+    self._exec_properties['module_file'] = self._module_file
+    self._trainer_executor.Do(
+        input_dict=self._input_dict,
+        output_dict=self._output_dict,
+        exec_properties=self._exec_properties)
+    self._verify_model_exports()
 
 
 if __name__ == '__main__':

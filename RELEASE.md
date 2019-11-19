@@ -1,7 +1,7 @@
 # Current version (not yet released; still in development)
 
 ## Major Features and Improvements
-*   Enabled KubeflowDagRunner to recognize RuntimeParameter and interpret 
+*   Enabled KubeflowDagRunner to recognize RuntimeParameter and interpret
     them as Argo workflow parameter, so that user can specify their values at
     runtime. Currently only attributes in ComponentSpec.PARAMETERS and the uri
     of external artifacts can be parameterized (cannot parameterize component
@@ -14,6 +14,8 @@
 *   Added support in Trainer to use other model artifacts. This enables
     scenarios such as warmstart.
 *   Removed tf.compat.v1 for iris example.
+*   Supported hparams artifact as input in Trainer, this is for preparing the
+    tuner support.
 
 ## Bug fixes and other changes
 

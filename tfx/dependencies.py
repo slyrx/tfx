@@ -35,6 +35,7 @@ def make_required_install_packages():
       'tensorflow-model-analysis>=0.15.2,<0.16',
       'tensorflow-transform>=0.15,<0.16',
       'tfx-bsl>=0.15.3,<0.16',
+      'keras-tuner>=1,<2',
   ]
 
 
