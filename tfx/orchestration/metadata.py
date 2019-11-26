@@ -25,7 +25,7 @@ import os
 import random
 import time
 import types
-from typing import Any, Dict, List, Optional, Set, Text, Type
+from typing import Any, Dict, List, Optional, Set, Text, Type, Union
 
 import absl
 import tensorflow as tf
@@ -109,8 +109,11 @@ def mysql_metadata_connection_config(
 class Metadata(object):
   """Helper class to handle metadata I/O."""
 
-  def __init__(self,
-               connection_config: metadata_store_pb2.ConnectionConfig) -> None:
+  def __init__(
+      self,
+      connection_config: Union[metadata_store_pb2.ConnectionConfig,
+                               metadata_store_pb2.MetadataStoreClientConfig]
+  ) -> None:
     self._connection_config = connection_config
     self._store = None
 
