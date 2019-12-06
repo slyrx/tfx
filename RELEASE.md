@@ -15,6 +15,8 @@
     scenarios such as warmstart.
 *   Removed tf.compat.v1 for iris example.
 *   Updated trainer executor to pass through custom config to user module.
+*   Added support for pipelines run in Kubeflow to log the Argo pod ID as an
+    execution property, enabling richer UI visualizations.
 
 ## Bug fixes and other changes
 

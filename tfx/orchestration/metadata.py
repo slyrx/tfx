@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import abc
 import collections
 import copy
 import hashlib
@@ -28,6 +29,7 @@ import types
 from typing import Any, Dict, List, Optional, Set, Text, Type
 
 import absl
+from six import with_metaclass
 import tensorflow as tf
 
 from ml_metadata.metadata_store import metadata_store
@@ -106,13 +108,19 @@ def mysql_metadata_connection_config(
 
 # TODO(ruoyu): Figure out the story mutable UDFs. We should not reuse previous
 # run when having different UDFs.
-class Metadata(object):
+class Metadata(with_metaclass(abc.ABCMeta, object)):
   """Helper class to handle metadata I/O."""
 
   def __init__(self,
                connection_config: metadata_store_pb2.ConnectionConfig) -> None:
     self._connection_config = connection_config
     self._store = None
+
+  @classmethod
+  def create(
+      cls,
+      connection_config: metadata_store_pb2.ConnectionConfig) -> 'Metadata':
+    return cls(connection_config=connection_config)
 
   def __enter__(self) -> 'Metadata':
     # TODO(ruoyu): Establishing a connection pool instead of newing
@@ -293,6 +301,7 @@ class Metadata(object):
 
   # TODO(ruoyu): Make pipeline_info and component_info required once migration
   # to go/tfx-oss-artifact-passing finishes.
+  # @abc.abstractmethod
   def _prepare_execution(
       self,
       state: Text,
