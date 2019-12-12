@@ -29,6 +29,9 @@ RUNTIME_PARAMETER_PATTERN = (r'({\\*"__class__\\*": \\*"RuntimeParameter\\*", '
 
 PARAMETER_NAME_LITERAL = r'(\\*"RuntimeParameter\\*")'
 
+# Name of pipeline_root parameter.
+_PIPELINE_ROOT = 'pipeline-root'
+
 
 class ExecutionDecision(object):
   """ExecutionDecision records how executor should perform next execution.
@@ -134,8 +137,12 @@ class ComponentInfo(object):
     self.component_id = component_id
 
 
+# TODO(b/146361011): Implement a checking mechanism preventing users from using
+# RuntimeParameter in Airflow/Beam DAG runner.
 class RuntimeParameter(json_utils.Jsonable):
   """Runtime parameter.
+
+  Currently only supported on KubeflowDagRunner.
 
   Attributes:
     name: The name of the runtime parameter.
@@ -181,3 +188,16 @@ class RuntimeParameter(json_utils.Jsonable):
     """RuntimeParameter is uniquely identified by its name."""
     return self.name.__hash__()
 
+
+# Pipeline root is by default specified as a RuntimeParameter when runnning on
+# KubeflowDagRunner. This constant offers users an easy access to the pipeline
+# root placeholder when defining a pipeline. For example,
+#
+# pusher = Pusher(
+#     model_export=trainer.outputs['model'],
+#     model_blessing=model_validator.outputs['blessing'],
+#     push_destination=pusher_pb2.PushDestination(
+#         filesystem=pusher_pb2.PushDestination.Filesystem(
+#             base_directory=os.path.join(
+#                 str(data_types.ROOT_PARAMETER), 'model_serving'))))
+ROOT_PARAMETER = RuntimeParameter(name=_PIPELINE_ROOT, ptype=Text)
