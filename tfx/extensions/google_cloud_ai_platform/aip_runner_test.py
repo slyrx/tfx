@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for tfx.extensions.google_cloud_ai_platform.runner."""
+"""Tests for tfx.extensions.google_cloud_ai_platform.aip_runner."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -24,7 +24,7 @@ import mock
 import tensorflow as tf
 
 from tfx import version
-from tfx.extensions.google_cloud_ai_platform import runner
+from tfx.extensions.google_cloud_ai_platform import aip_runner
 
 
 class RunnerTest(tf.test.TestCase):
@@ -45,15 +45,15 @@ class RunnerTest(tf.test.TestCase):
             'gaip_training_args': self._training_inputs
         },
     }
-    self._cmle_serving_args = {
+    self._aip_serving_args = {
         'model_name': 'model_name',
         'project_id': self._project_id,
     }
 
   @mock.patch(
-      'tfx.extensions.google_cloud_ai_platform.runner.discovery'
+      'tfx.extensions.google_cloud_ai_platform.aip_runner.discovery'
   )
-  def testStartCMLETraining(self, mock_discovery):
+  def testStartAIPTraining(self, mock_discovery):
     mock_discovery.build.return_value = self._mock_api_client
     mock_create = mock.Mock()
     self._mock_api_client.projects().jobs().create = mock_create
@@ -65,9 +65,9 @@ class RunnerTest(tf.test.TestCase):
 
     class_path = 'foo.bar.class'
 
-    runner.start_cmle_training(self._inputs, self._outputs,
-                               self._exec_properties, class_path,
-                               self._training_inputs)
+    aip_runner.start_aip_training(self._inputs, self._outputs,
+                                  self._exec_properties, class_path,
+                                  self._training_inputs)
 
     mock_create.assert_called_with(
         body=mock.ANY, parent='projects/{}'.format(self._project_id))
@@ -89,9 +89,9 @@ class RunnerTest(tf.test.TestCase):
     mock_get.execute.assert_called_with()
 
   @mock.patch(
-      'tfx.extensions.google_cloud_ai_platform.runner.discovery'
+      'tfx.extensions.google_cloud_ai_platform.aip_runner.discovery'
   )
-  def testStartCMLETrainingWithUserContainer(self, mock_discovery):
+  def testStartAIPTrainingWithUserContainer(self, mock_discovery):
     self._training_inputs['masterConfig'] = {'imageUri': 'my-custom-image'}
     mock_discovery.build.return_value = self._mock_api_client
     mock_create = mock.Mock()
@@ -104,9 +104,9 @@ class RunnerTest(tf.test.TestCase):
 
     class_path = 'foo.bar.class'
 
-    runner.start_cmle_training(self._inputs, self._outputs,
-                               self._exec_properties, class_path,
-                               self._training_inputs)
+    aip_runner.start_aip_training(self._inputs, self._outputs,
+                                  self._exec_properties, class_path,
+                                  self._training_inputs)
 
     mock_create.assert_called_with(
         body=mock.ANY, parent='projects/{}'.format(self._project_id))
@@ -126,9 +126,9 @@ class RunnerTest(tf.test.TestCase):
     mock_get.execute.assert_called_with()
 
   @mock.patch(
-      'tfx.extensions.google_cloud_ai_platform.runner.discovery'
+      'tfx.extensions.google_cloud_ai_platform.aip_runner.discovery'
   )
-  def testDeployModelForCMLEServing(self, mock_discovery):
+  def testDeployModelForAIPPrediction(self, mock_discovery):
     serving_path = os.path.join(self._output_data_dir, 'serving_path')
     model_version = 'model_version'
 
@@ -142,8 +142,8 @@ class RunnerTest(tf.test.TestCase):
     self._mock_api_client.projects().models().versions(
     ).setDefault = mock_set_default
     mock_set_default_execute = mock.Mock()
-    self._mock_api_client.projects().models().versions(
-    ).setDefault().execute = mock_set_default_execute
+    self._mock_api_client.projects().models().versions().setDefault(
+    ).execute = mock_set_default_execute
 
     mock_get.return_value.execute.return_value = {
         'done': 'Done',
@@ -152,8 +152,8 @@ class RunnerTest(tf.test.TestCase):
         },
     }
 
-    runner.deploy_model_for_cmle_serving(serving_path, model_version,
-                                         self._cmle_serving_args)
+    aip_runner.deploy_model_for_aip_prediction(serving_path, model_version,
+                                               self._aip_serving_args)
 
     mock_create.assert_called_with(
         body=mock.ANY,
@@ -164,8 +164,8 @@ class RunnerTest(tf.test.TestCase):
         {
             'name': 'v{}'.format(model_version),
             'deployment_uri': serving_path,
-            'runtime_version': runner._get_tf_runtime_version(),
-            'python_version': runner._get_caip_python_version(),
+            'runtime_version': aip_runner._get_tf_runtime_version(),
+            'python_version': aip_runner._get_caip_python_version(),
         }, body)
     mock_get.assert_called_with(name='op_name')
 

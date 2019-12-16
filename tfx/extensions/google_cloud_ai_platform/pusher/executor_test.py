@@ -66,21 +66,21 @@ class ExecutorTest(tf.test.TestCase):
     }
     self._executor = Executor()
 
-  @mock.patch.object(executor, 'runner', autospec=True)
-  def testDoBlessed(self, mock_runner):
+  @mock.patch.object(executor, 'aip_runner', autospec=True)
+  def testDoBlessed(self, mock_aip_runner):
     self._model_blessing.uri = os.path.join(self._source_data_dir,
                                             'model_validator/blessed/')
     self._model_blessing.set_int_custom_property('blessed', 1)
     self._executor.Do(self._input_dict, self._output_dict,
                       self._exec_properties)
-    mock_runner.deploy_model_for_cmle_serving.assert_called_once_with(
+    mock_aip_runner.deploy_model_for_aip_prediction.assert_called_once_with(
         self._model_push.artifact.custom_properties['pushed_model']
         .string_value, mock.ANY, mock.ANY)
     self.assertEqual(
         1, self._model_push.artifact.custom_properties['pushed'].int_value)
 
-  @mock.patch.object(executor, 'runner', autospec=True)
-  def testDoNotBlessed(self, mock_runner):
+  @mock.patch.object(executor, 'aip_runner', autospec=True)
+  def testDoNotBlessed(self, mock_aip_runner):
     self._model_blessing.uri = os.path.join(self._source_data_dir,
                                             'model_validator/not_blessed/')
     self._model_blessing.set_int_custom_property('blessed', 0)
@@ -88,7 +88,7 @@ class ExecutorTest(tf.test.TestCase):
                       self._exec_properties)
     self.assertEqual(
         0, self._model_push.artifact.custom_properties['pushed'].int_value)
-    mock_runner.deploy_model_for_cmle_serving.assert_not_called()
+    mock_aip_runner.deploy_model_for_aip_prediction.assert_not_called()
 
 
 if __name__ == '__main__':
