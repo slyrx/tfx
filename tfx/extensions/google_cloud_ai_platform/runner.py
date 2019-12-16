@@ -135,6 +135,15 @@ def start_cmle_training(input_dict: Dict[Text, List[types.Artifact]],
     training_inputs['masterConfig'] = {
         'imageUri': _TFX_IMAGE,
     }
+  # For distributed training
+  if not training_inputs.get('workderConfig'):
+    training_inputs['workerConfig'] = {
+        'imageUri': _TFX_IMAGE,
+    }
+  if not training_inputs.get('parameterServerConfig'):
+    training_inputs['parameterServerConfig'] = {
+        'imageUri': _TFX_IMAGE,
+    }
 
   training_inputs['args'] = job_args
 
